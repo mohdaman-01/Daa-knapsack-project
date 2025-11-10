@@ -16,55 +16,75 @@
         <div class="input-section">
             <div class="budget-input">
                 <label for="budget">Investment Budget (₹):</label>
-                <input type="number" id="budget" value="500000" min="0" step="1000">
+                <div class="input-wrapper">
+                    <input type="number" id="budget" value="500000" min="0" step="1000" placeholder="Enter your budget">
+                    <span class="input-hint">Adjust your investment budget</span>
+                </div>
             </div>
 
             <div class="stocks-table">
-                <h2>Available Stocks</h2>
-                <table id="stocksTable">
-                    <thead>
-                        <tr>
-                            <th>Stock Symbol</th>
-                            <th>Price per Share (₹)</th>
-                            <th>Expected Return (%)</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="stocksBody"></tbody>
-                </table>
+                <div class="table-header">
+                    <h2>Available Stocks</h2>
+                    <button id="resetStocks" class="btn-reset">↻ Reset to Default</button>
+                </div>
+                <div class="table-wrapper">
+                    <table id="stocksTable">
+                        <thead>
+                            <tr>
+                                <th>Stock Symbol</th>
+                                <th>Price per Share (₹)</th>
+                                <th>Expected Return (%)</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stocksBody"></tbody>
+                    </table>
+                </div>
                 <button id="addStock" class="btn-add">+ Add Stock</button>
             </div>
 
-            <button id="optimize" class="btn-optimize">Optimize Portfolio</button>
+            <button id="optimize" class="btn-optimize">
+                <span class="btn-text">🚀 Optimize Portfolio</span>
+                <span class="btn-loader" style="display: none;">⏳ Optimizing...</span>
+            </button>
         </div>
 
         <div class="results-section" id="results" style="display: none;">
-            <h2>Optimized Portfolio</h2>
+            <div class="results-header">
+                <h2>✨ Optimized Portfolio</h2>
+                <p class="results-subtitle">Based on 0/1 Knapsack Dynamic Programming Algorithm</p>
+            </div>
+            
             <div class="summary">
                 <div class="summary-item">
-                    <span class="label">Total Investment:</span>
+                    <span class="label">💰 Total Investment</span>
                     <span class="value" id="totalInvestment">₹0</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="investmentProgress"></div>
+                    </div>
                 </div>
                 <div class="summary-item">
-                    <span class="label">Expected Return:</span>
+                    <span class="label">📈 Expected Return</span>
                     <span class="value" id="expectedReturn">0%</span>
                 </div>
                 <div class="summary-item">
-                    <span class="label">Remaining Budget:</span>
+                    <span class="label">💵 Remaining Budget</span>
                     <span class="value" id="remainingBudget">₹0</span>
                 </div>
             </div>
 
             <div class="selected-stocks">
-                <h3>Selected Stocks</h3>
+                <h3>📊 Selected Stocks</h3>
                 <div id="selectedStocksList"></div>
             </div>
 
             <div class="visualization">
-                <h3>Expected Returns Visualization</h3>
+                <h3>📉 Expected Returns Visualization</h3>
                 <canvas id="portfolioChart"></canvas>
             </div>
         </div>
+        
+        <div id="toast" class="toast"></div>
     </div>
 
     <script src="knapsack.js"></script>
