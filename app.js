@@ -386,13 +386,13 @@ function drawPieChart(result) {
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr;
-    canvas.height = 400 * dpr;
+    canvas.height = 450 * dpr;
     canvas.style.width = rect.width + 'px';
-    canvas.style.height = '400px';
+    canvas.style.height = '450px';
     ctx.scale(dpr, dpr);
 
     const width = rect.width;
-    const height = 400;
+    const height = 450;
 
     ctx.clearRect(0, 0, width, height);
 
@@ -416,11 +416,13 @@ function drawPieChart(result) {
         ['#fa709a', '#fee140']
     ];
 
-    // Center and radius
+    // Center and radius - much smaller to fit labels within canvas
+    const padding = 80; // Space for labels
     const centerX = width / 2;
-    const centerY = height / 2 - 20;
-    const radius = Math.min(width, height) / 3;
-    const innerRadius = radius * 0.5; // Donut chart
+    const centerY = height / 2;
+    const availableSize = Math.min(width - padding * 2, height - padding * 2);
+    const radius = availableSize / 2;
+    const innerRadius = radius * 0.55; // Donut chart
 
     let currentAngle = -Math.PI / 2;
 
@@ -456,55 +458,22 @@ function drawPieChart(result) {
         ctx.lineWidth = 3;
         ctx.stroke();
 
-        // Calculate label position
-        const labelAngle = currentAngle + sliceAngle / 2;
-        const labelRadius = radius + 40;
-        const labelX = centerX + Math.cos(labelAngle) * labelRadius;
-        const labelY = centerY + Math.sin(labelAngle) * labelRadius;
-
-        // Draw connecting line
-        const lineStartX = centerX + Math.cos(labelAngle) * (radius + 5);
-        const lineStartY = centerY + Math.sin(labelAngle) * (radius + 5);
-        const lineMidX = centerX + Math.cos(labelAngle) * (radius + 20);
-        const lineMidY = centerY + Math.sin(labelAngle) * (radius + 20);
-
-        ctx.strokeStyle = colorPair[1];
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(lineStartX, lineStartY);
-        ctx.lineTo(lineMidX, lineMidY);
-        ctx.lineTo(labelX, lineMidY);
-        ctx.stroke();
-
-        // Draw label background
+        // Draw percentage directly on the slice
         const percentage = ((stock.price / total) * 100).toFixed(1);
-        const labelText = `${stock.symbol}`;
-        const percentText = `${percentage}%`;
+        const midAngle = currentAngle + sliceAngle / 2;
+        const textRadius = (radius + innerRadius) / 2;
+        const textX = centerX + Math.cos(midAngle) * textRadius;
+        const textY = centerY + Math.sin(midAngle) * textRadius;
 
-        ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
-        const textWidth = Math.max(ctx.measureText(labelText).width, ctx.measureText(percentText).width);
-
-        const bgX = labelX > centerX ? labelX : labelX - textWidth - 16;
-        const bgY = lineMidY - 20;
-
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-        ctx.beginPath();
-        ctx.roundRect(bgX, bgY, textWidth + 16, 36, 8);
-        ctx.fill();
-
-        ctx.strokeStyle = colorPair[1];
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Draw label text
-        ctx.fillStyle = '#2d3748';
-        ctx.textAlign = labelX > centerX ? 'left' : 'right';
-        ctx.textBaseline = 'top';
-        ctx.fillText(labelText, labelX > centerX ? bgX + 8 : bgX + textWidth + 8, bgY + 5);
-
-        ctx.fillStyle = colorPair[1];
-        ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
-        ctx.fillText(percentText, labelX > centerX ? bgX + 8 : bgX + textWidth + 8, bgY + 20);
+        // Draw percentage on slice
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(`${percentage}%`, textX, textY);
+        ctx.shadowBlur = 0;
 
         currentAngle += sliceAngle;
     });
@@ -529,4 +498,27 @@ function drawPieChart(result) {
     ctx.fillStyle = '#667eea';
     ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
     ctx.fillText(`₹${total.toFixed(0)}`, centerX, centerY + 12);
+
+    // Draw legend below the chart
+    drawPieLegend(result, colors, total);
+}
+
+// Draw legend for pie chart
+function drawPieLegend(result, colors, total) {
+    const legendContainer = document.getElementById('pieLegend');
+    legendContainer.innerHTML = '';
+
+    result.selectedStocks.forEach((stock, index) => {
+        const colorPair = colors[index % colors.length];
+        const percentage = ((stock.price / total) * 100).toFixed(1);
+
+        const legendItem = document.createElement('div');
+        legendItem.className = 'legend-item';
+        legendItem.innerHTML = `
+            <div class="legend-color" style="background: linear-gradient(135deg, ${colorPair[0]}, ${colorPair[1]})"></div>
+            <span class="legend-label">${stock.symbol}</span>
+            <span class="legend-value">₹${stock.price.toFixed(0)} (${percentage}%)</span>
+        `;
+        legendContainer.appendChild(legendItem);
+    });
 }
