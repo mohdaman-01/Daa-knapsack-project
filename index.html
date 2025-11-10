@@ -15,8 +15,8 @@
 
         <div class="input-section">
             <div class="budget-input">
-                <label for="budget">Investment Budget ($):</label>
-                <input type="number" id="budget" value="10000" min="0" step="100">
+                <label for="budget">Investment Budget (₹):</label>
+                <input type="number" id="budget" value="500000" min="0" step="1000">
             </div>
 
             <div class="stocks-table">
@@ -25,7 +25,7 @@
                     <thead>
                         <tr>
                             <th>Stock Symbol</th>
-                            <th>Price per Share ($)</th>
+                            <th>Price per Share (₹)</th>
                             <th>Expected Return (%)</th>
                             <th>Action</th>
                         </tr>
@@ -43,7 +43,7 @@
             <div class="summary">
                 <div class="summary-item">
                     <span class="label">Total Investment:</span>
-                    <span class="value" id="totalInvestment">$0</span>
+                    <span class="value" id="totalInvestment">₹0</span>
                 </div>
                 <div class="summary-item">
                     <span class="label">Expected Return:</span>
@@ -51,7 +51,7 @@
                 </div>
                 <div class="summary-item">
                     <span class="label">Remaining Budget:</span>
-                    <span class="value" id="remainingBudget">$0</span>
+                    <span class="value" id="remainingBudget">₹0</span>
                 </div>
             </div>
 
@@ -61,6 +61,7 @@
             </div>
 
             <div class="visualization">
+                <h3>Expected Returns Visualization</h3>
                 <canvas id="portfolioChart"></canvas>
             </div>
         </div>

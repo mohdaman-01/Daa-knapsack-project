@@ -1,10 +1,10 @@
-// Sample stock data
+// Sample stock data (Indian stocks with prices in Rupees)
 const defaultStocks = [
-    { symbol: 'AAPL', price: 175, expectedReturn: 12 },
-    { symbol: 'GOOGL', price: 140, expectedReturn: 15 },
-    { symbol: 'MSFT', price: 380, expectedReturn: 18 },
-    { symbol: 'AMZN', price: 145, expectedReturn: 14 },
-    { symbol: 'TSLA', price: 240, expectedReturn: 20 }
+    { symbol: 'TCS', price: 3850, expectedReturn: 12 },
+    { symbol: 'INFY', price: 1520, expectedReturn: 15 },
+    { symbol: 'RELIANCE', price: 2450, expectedReturn: 18 },
+    { symbol: 'HDFC', price: 1680, expectedReturn: 14 },
+    { symbol: 'WIPRO', price: 445, expectedReturn: 20 }
 ];
 
 let stocks = [...defaultStocks];
@@ -54,7 +54,7 @@ function updateStock(e) {
 
 // Add new stock
 function addStock() {
-    stocks.push({ symbol: 'NEW', price: 100, expectedReturn: 10 });
+    stocks.push({ symbol: 'NEW', price: 1000, expectedReturn: 10 });
     renderStocks();
 }
 
@@ -94,11 +94,11 @@ function displayResults(result, budget) {
     
     // Update summary
     document.getElementById('totalInvestment').textContent = 
-        `$${result.totalInvestment.toFixed(2)}`;
+        `₹${result.totalInvestment.toFixed(2)}`;
     document.getElementById('expectedReturn').textContent = 
         `${result.totalReturn.toFixed(2)}%`;
     document.getElementById('remainingBudget').textContent = 
-        `$${result.remainingBudget.toFixed(2)}`;
+        `₹${result.remainingBudget.toFixed(2)}`;
     
     // Display selected stocks
     const selectedList = document.getElementById('selectedStocksList');
@@ -113,7 +113,7 @@ function displayResults(result, budget) {
             card.innerHTML = `
                 <div class="stock-info">
                     <div class="stock-symbol">${stock.symbol}</div>
-                    <div class="stock-details">Price: $${stock.price.toFixed(2)}</div>
+                    <div class="stock-details">Price: ₹${stock.price.toFixed(2)}</div>
                 </div>
                 <div class="stock-return">+${stock.expectedReturn}%</div>
             `;
@@ -151,33 +151,41 @@ function drawChart(result, budget) {
         return;
     }
     
-    // Draw bar chart
+    // Draw bar chart with animations
     const barWidth = width / result.selectedStocks.length;
     const maxReturn = Math.max(...result.selectedStocks.map(s => s.expectedReturn));
+    const padding = 20;
     
     result.selectedStocks.forEach((stock, index) => {
-        const barHeight = (stock.expectedReturn / maxReturn) * (height - 60);
+        const barHeight = (stock.expectedReturn / maxReturn) * (height - 80);
         const x = index * barWidth;
-        const y = height - barHeight - 40;
+        const y = height - barHeight - 50;
+        const actualBarWidth = barWidth - padding;
         
-        // Draw bar
-        const gradient = ctx.createLinearGradient(0, y, 0, height - 40);
+        // Draw shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.fillRect(x + padding/2 + 2, y + 2, actualBarWidth, barHeight);
+        
+        // Draw bar with gradient
+        const gradient = ctx.createLinearGradient(0, y, 0, height - 50);
         gradient.addColorStop(0, '#667eea');
         gradient.addColorStop(1, '#764ba2');
         
         ctx.fillStyle = gradient;
-        ctx.fillRect(x + 10, y, barWidth - 20, barHeight);
+        ctx.beginPath();
+        ctx.roundRect(x + padding/2, y, actualBarWidth, barHeight, [8, 8, 0, 0]);
+        ctx.fill();
         
         // Draw label
-        ctx.fillStyle = '#333';
-        ctx.font = '12px Arial';
+        ctx.fillStyle = '#2d3748';
+        ctx.font = 'bold 13px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(stock.symbol, x + barWidth / 2, height - 20);
+        ctx.fillText(stock.symbol, x + barWidth / 2, height - 25);
         
-        // Draw value
-        ctx.fillStyle = '#667eea';
-        ctx.font = 'bold 14px Arial';
-        ctx.fillText(`${stock.expectedReturn}%`, x + barWidth / 2, y - 5);
+        // Draw value on top of bar
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText(`${stock.expectedReturn}%`, x + barWidth / 2, y + 25);
     });
 }
 
