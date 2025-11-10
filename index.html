@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Investment Optimizer - Knapsack Algorithm</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Stock Investment Optimizer</h1>
+            <p class="subtitle">Application of Knapsack Algorithm in Stock Investment Optimization</p>
+        </header>
+
+        <div class="input-section">
+            <div class="budget-input">
+                <label for="budget">Investment Budget ($):</label>
+                <input type="number" id="budget" value="10000" min="0" step="100">
+            </div>
+
+            <div class="stocks-table">
+                <h2>Available Stocks</h2>
+                <table id="stocksTable">
+                    <thead>
+                        <tr>
+                            <th>Stock Symbol</th>
+                            <th>Price per Share ($)</th>
+                            <th>Expected Return (%)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stocksBody"></tbody>
+                </table>
+                <button id="addStock" class="btn-add">+ Add Stock</button>
+            </div>
+
+            <button id="optimize" class="btn-optimize">Optimize Portfolio</button>
+        </div>
+
+        <div class="results-section" id="results" style="display: none;">
+            <h2>Optimized Portfolio</h2>
+            <div class="summary">
+                <div class="summary-item">
+                    <span class="label">Total Investment:</span>
+                    <span class="value" id="totalInvestment">$0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Expected Return:</span>
+                    <span class="value" id="expectedReturn">0%</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Remaining Budget:</span>
+                    <span class="value" id="remainingBudget">$0</span>
+                </div>
+            </div>
+
+            <div class="selected-stocks">
+                <h3>Selected Stocks</h3>
+                <div id="selectedStocksList"></div>
+            </div>
+
+            <div class="visualization">
+                <canvas id="portfolioChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="knapsack.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
