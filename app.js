@@ -184,8 +184,9 @@ function displayResults(result, budget) {
         });
     }
 
-    // Draw chart
+    // Draw charts
     drawChart(result, budget);
+    drawPieChart(result);
 
     // Scroll to results
     setTimeout(() => {
@@ -210,66 +211,322 @@ function animateValue(id, start, end, duration, prefix = '', suffix = '') {
     }, 16);
 }
 
-// Draw portfolio visualization
+// Draw portfolio visualization with enhanced aesthetics
 function drawChart(result, budget) {
     const canvas = document.getElementById('portfolioChart');
     const ctx = canvas.getContext('2d');
 
-    // Set canvas size
-    canvas.width = canvas.offsetWidth;
-    canvas.height = 300;
+    // Set canvas size with device pixel ratio for crisp rendering
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 400 * dpr;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = '400px';
+    ctx.scale(dpr, dpr);
 
-    const width = canvas.width;
-    const height = canvas.height;
+    const width = rect.width;
+    const height = 400;
 
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
 
     if (result.selectedStocks.length === 0) {
-        ctx.fillStyle = '#666';
-        ctx.font = '16px Arial';
+        // Enhanced empty state
+        ctx.fillStyle = '#cbd5e0';
+        ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
         ctx.textAlign = 'center';
-        ctx.fillText('No data to display', width / 2, height / 2);
+        ctx.fillText('📊 No data to display', width / 2, height / 2);
         return;
     }
 
-    // Draw bar chart with animations
-    const barWidth = width / result.selectedStocks.length;
+    // Draw grid lines for better readability
+    drawGrid(ctx, width, height);
+
+    // Calculate dimensions
+    const chartPadding = { top: 40, right: 30, bottom: 80, left: 50 };
+    const chartWidth = width - chartPadding.left - chartPadding.right;
+    const chartHeight = height - chartPadding.top - chartPadding.bottom;
+    const barWidth = chartWidth / result.selectedStocks.length;
     const maxReturn = Math.max(...result.selectedStocks.map(s => s.expectedReturn));
-    const padding = 20;
+    const padding = Math.min(barWidth * 0.2, 20);
+
+    // Color palette for bars
+    const colors = [
+        ['#667eea', '#764ba2'],
+        ['#f093fb', '#f5576c'],
+        ['#4facfe', '#00f2fe'],
+        ['#43e97b', '#38f9d7'],
+        ['#fa709a', '#fee140']
+    ];
 
     result.selectedStocks.forEach((stock, index) => {
-        const barHeight = (stock.expectedReturn / maxReturn) * (height - 80);
-        const x = index * barWidth;
-        const y = height - barHeight - 50;
+        const barHeight = (stock.expectedReturn / maxReturn) * chartHeight;
+        const x = chartPadding.left + (index * barWidth);
+        const y = chartPadding.top + (chartHeight - barHeight);
         const actualBarWidth = barWidth - padding;
 
-        // Draw shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-        ctx.fillRect(x + padding / 2 + 2, y + 2, actualBarWidth, barHeight);
+        // Select color for this bar
+        const colorPair = colors[index % colors.length];
+
+        // Draw 3D shadow effect
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+        ctx.beginPath();
+        ctx.roundRect(x + padding / 2 + 4, y + 4, actualBarWidth, barHeight, [12, 12, 4, 4]);
+        ctx.fill();
 
         // Draw bar with gradient
-        const gradient = ctx.createLinearGradient(0, y, 0, height - 50);
-        gradient.addColorStop(0, '#667eea');
-        gradient.addColorStop(1, '#764ba2');
+        const gradient = ctx.createLinearGradient(x, y, x, y + barHeight);
+        gradient.addColorStop(0, colorPair[0]);
+        gradient.addColorStop(1, colorPair[1]);
 
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.roundRect(x + padding / 2, y, actualBarWidth, barHeight, [8, 8, 0, 0]);
+        ctx.roundRect(x + padding / 2, y, actualBarWidth, barHeight, [12, 12, 4, 4]);
         ctx.fill();
 
-        // Draw label
-        ctx.fillStyle = '#2d3748';
-        ctx.font = 'bold 13px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(stock.symbol, x + barWidth / 2, height - 25);
+        // Add glossy effect on top
+        const glossGradient = ctx.createLinearGradient(x, y, x, y + barHeight * 0.3);
+        glossGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+        glossGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = glossGradient;
+        ctx.beginPath();
+        ctx.roundRect(x + padding / 2, y, actualBarWidth, barHeight * 0.3, [12, 12, 0, 0]);
+        ctx.fill();
 
-        // Draw value on top of bar
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 16px Arial';
-        ctx.fillText(`${stock.expectedReturn}%`, x + barWidth / 2, y + 25);
+        // Draw stock symbol below bar
+        ctx.fillStyle = '#2d3748';
+        ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+        ctx.textAlign = 'center';
+        ctx.fillText(stock.symbol, x + barWidth / 2, height - chartPadding.bottom + 25);
+
+        // Draw price below symbol
+        ctx.fillStyle = '#718096';
+        ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+        ctx.fillText(`₹${stock.price.toFixed(0)}`, x + barWidth / 2, height - chartPadding.bottom + 42);
+
+        // Draw percentage value on bar with background
+        const percentText = `${stock.expectedReturn}%`;
+        ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+        const textMetrics = ctx.measureText(percentText);
+        const textWidth = textMetrics.width;
+        const textHeight = 20;
+        const textX = x + barWidth / 2;
+        const textY = barHeight > 60 ? y + 30 : y - 15;
+
+        // Draw background for text
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.beginPath();
+        ctx.roundRect(textX - textWidth / 2 - 8, textY - textHeight / 2 - 4, textWidth + 16, textHeight + 8, 8);
+        ctx.fill();
+
+        // Draw text
+        ctx.fillStyle = colorPair[1];
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(percentText, textX, textY);
     });
+
+    // Draw Y-axis labels
+    drawYAxisLabels(ctx, chartPadding, chartHeight, maxReturn);
+
+    // Draw title
+    ctx.fillStyle = '#2d3748';
+    ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+    ctx.textAlign = 'left';
+    ctx.fillText('Expected Returns (%)', chartPadding.left, 25);
+}
+
+// Draw grid lines
+function drawGrid(ctx, width, height) {
+    const chartPadding = { top: 40, right: 30, bottom: 80, left: 50 };
+    const chartHeight = height - chartPadding.top - chartPadding.bottom;
+    const gridLines = 5;
+
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]);
+
+    for (let i = 0; i <= gridLines; i++) {
+        const y = chartPadding.top + (chartHeight / gridLines) * i;
+        ctx.beginPath();
+        ctx.moveTo(chartPadding.left, y);
+        ctx.lineTo(width - chartPadding.right, y);
+        ctx.stroke();
+    }
+
+    ctx.setLineDash([]);
+}
+
+// Draw Y-axis labels
+function drawYAxisLabels(ctx, chartPadding, chartHeight, maxReturn) {
+    const gridLines = 5;
+    ctx.fillStyle = '#718096';
+    ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+
+    for (let i = 0; i <= gridLines; i++) {
+        const value = (maxReturn / gridLines) * (gridLines - i);
+        const y = chartPadding.top + (chartHeight / gridLines) * i;
+        ctx.fillText(`${value.toFixed(1)}%`, chartPadding.left - 10, y);
+    }
 }
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', init);
+
+
+// Draw pie chart for investment distribution
+function drawPieChart(result) {
+    const canvas = document.getElementById('pieChart');
+    const ctx = canvas.getContext('2d');
+
+    // Set canvas size with device pixel ratio
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 400 * dpr;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = '400px';
+    ctx.scale(dpr, dpr);
+
+    const width = rect.width;
+    const height = 400;
+
+    ctx.clearRect(0, 0, width, height);
+
+    if (result.selectedStocks.length === 0) {
+        ctx.fillStyle = '#cbd5e0';
+        ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+        ctx.textAlign = 'center';
+        ctx.fillText('📊 No data to display', width / 2, height / 2);
+        return;
+    }
+
+    // Calculate total investment
+    const total = result.selectedStocks.reduce((sum, stock) => sum + stock.price, 0);
+
+    // Color palette
+    const colors = [
+        ['#667eea', '#764ba2'],
+        ['#f093fb', '#f5576c'],
+        ['#4facfe', '#00f2fe'],
+        ['#43e97b', '#38f9d7'],
+        ['#fa709a', '#fee140']
+    ];
+
+    // Center and radius
+    const centerX = width / 2;
+    const centerY = height / 2 - 20;
+    const radius = Math.min(width, height) / 3;
+    const innerRadius = radius * 0.5; // Donut chart
+
+    let currentAngle = -Math.PI / 2;
+
+    // Draw pie slices
+    result.selectedStocks.forEach((stock, index) => {
+        const sliceAngle = (stock.price / total) * 2 * Math.PI;
+        const colorPair = colors[index % colors.length];
+
+        // Create gradient for slice
+        const gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, radius);
+        gradient.addColorStop(0, colorPair[0]);
+        gradient.addColorStop(1, colorPair[1]);
+
+        // Draw outer shadow
+        ctx.save();
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetX = 3;
+        ctx.shadowOffsetY = 3;
+
+        // Draw slice
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+        ctx.arc(centerX, centerY, innerRadius, currentAngle + sliceAngle, currentAngle, true);
+        ctx.closePath();
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        ctx.restore();
+
+        // Draw white border between slices
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Calculate label position
+        const labelAngle = currentAngle + sliceAngle / 2;
+        const labelRadius = radius + 40;
+        const labelX = centerX + Math.cos(labelAngle) * labelRadius;
+        const labelY = centerY + Math.sin(labelAngle) * labelRadius;
+
+        // Draw connecting line
+        const lineStartX = centerX + Math.cos(labelAngle) * (radius + 5);
+        const lineStartY = centerY + Math.sin(labelAngle) * (radius + 5);
+        const lineMidX = centerX + Math.cos(labelAngle) * (radius + 20);
+        const lineMidY = centerY + Math.sin(labelAngle) * (radius + 20);
+
+        ctx.strokeStyle = colorPair[1];
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(lineStartX, lineStartY);
+        ctx.lineTo(lineMidX, lineMidY);
+        ctx.lineTo(labelX, lineMidY);
+        ctx.stroke();
+
+        // Draw label background
+        const percentage = ((stock.price / total) * 100).toFixed(1);
+        const labelText = `${stock.symbol}`;
+        const percentText = `${percentage}%`;
+
+        ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+        const textWidth = Math.max(ctx.measureText(labelText).width, ctx.measureText(percentText).width);
+
+        const bgX = labelX > centerX ? labelX : labelX - textWidth - 16;
+        const bgY = lineMidY - 20;
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.beginPath();
+        ctx.roundRect(bgX, bgY, textWidth + 16, 36, 8);
+        ctx.fill();
+
+        ctx.strokeStyle = colorPair[1];
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw label text
+        ctx.fillStyle = '#2d3748';
+        ctx.textAlign = labelX > centerX ? 'left' : 'right';
+        ctx.textBaseline = 'top';
+        ctx.fillText(labelText, labelX > centerX ? bgX + 8 : bgX + textWidth + 8, bgY + 5);
+
+        ctx.fillStyle = colorPair[1];
+        ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+        ctx.fillText(percentText, labelX > centerX ? bgX + 8 : bgX + textWidth + 8, bgY + 20);
+
+        currentAngle += sliceAngle;
+    });
+
+    // Draw center circle (donut hole) with gradient
+    const centerGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, innerRadius);
+    centerGradient.addColorStop(0, '#ffffff');
+    centerGradient.addColorStop(1, '#f7fafc');
+
+    ctx.fillStyle = centerGradient;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, innerRadius, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Draw center text
+    ctx.fillStyle = '#2d3748';
+    ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Total', centerX, centerY - 12);
+
+    ctx.fillStyle = '#667eea';
+    ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+    ctx.fillText(`₹${total.toFixed(0)}`, centerX, centerY + 12);
+}
