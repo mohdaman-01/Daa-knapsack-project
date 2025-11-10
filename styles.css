@@ -814,3 +814,52 @@ canvas:hover {
     color: #718096;
     font-weight: 500;
 }
+
+
+/* Quantity Badge */
+.quantity-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 700;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+.stock-details {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.total-cost {
+    font-weight: 700;
+    color: #667eea;
+    font-size: 0.95em;
+}
+
+.stock-return {
+    text-align: right;
+}
+
+.return-percent {
+    font-size: 1.8em;
+    font-weight: 800;
+    background: linear-gradient(135deg, #10b981, #059669);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    padding: 10px 20px;
+    border-radius: 12px;
+    background-color: #d1fae5;
+}
+
+.return-total {
+    font-size: 0.9em;
+    color: #059669;
+    font-weight: 600;
+    margin-top: 5px;
+}

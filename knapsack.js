@@ -5,55 +5,76 @@ class KnapsackOptimizer {
         this.stocks = stocks;
     }
 
-    // 0/1 Knapsack using Dynamic Programming
+    // Unbounded Knapsack using Dynamic Programming (allows multiple shares)
     optimize() {
         const n = this.stocks.length;
         const W = this.budget;
         
-        // Create DP table
-        const dp = Array(n + 1).fill(null).map(() => Array(W + 1).fill(0));
+        // Create DP table and parent tracking
+        const dp = Array(W + 1).fill(0);
+        const parent = Array(W + 1).fill(-1);
         
-        // Build table in bottom-up manner
-        for (let i = 1; i <= n; i++) {
-            const stock = this.stocks[i - 1];
-            const price = Math.floor(stock.price);
-            const value = stock.expectedReturn;
-            
-            for (let w = 0; w <= W; w++) {
-                if (price <= w) {
-                    dp[i][w] = Math.max(
-                        dp[i - 1][w],
-                        dp[i - 1][w - price] + value
-                    );
-                } else {
-                    dp[i][w] = dp[i - 1][w];
+        // Build table - unbounded knapsack allows multiple items
+        for (let w = 1; w <= W; w++) {
+            for (let i = 0; i < n; i++) {
+                const stock = this.stocks[i];
+                const price = Math.floor(stock.price);
+                const value = stock.expectedReturn;
+                
+                if (price <= w && dp[w - price] + value > dp[w]) {
+                    dp[w] = dp[w - price] + value;
+                    parent[w] = i;
                 }
             }
         }
         
-        // Backtrack to find selected stocks
-        const selectedStocks = [];
+        // Backtrack to find selected stocks with quantities
+        const stockQuantities = new Map();
         let w = W;
         
-        for (let i = n; i > 0 && w > 0; i--) {
-            if (dp[i][w] !== dp[i - 1][w]) {
-                const stock = this.stocks[i - 1];
-                selectedStocks.push(stock);
-                w -= Math.floor(stock.price);
-            }
+        while (w > 0 && parent[w] !== -1) {
+            const stockIndex = parent[w];
+            const stock = this.stocks[stockIndex];
+            const price = Math.floor(stock.price);
+            
+            // Count quantity
+            const key = stock.symbol;
+            stockQuantities.set(key, (stockQuantities.get(key) || 0) + 1);
+            
+            w -= price;
         }
         
-        // Calculate totals
-        const totalInvestment = selectedStocks.reduce((sum, stock) => sum + stock.price, 0);
-        const totalReturn = selectedStocks.reduce((sum, stock) => sum + stock.expectedReturn, 0);
+        // Build result with quantities
+        const selectedStocks = [];
+        let totalInvestment = 0;
+        let totalReturn = 0;
+        
+        for (const [symbol, quantity] of stockQuantities) {
+            const stock = this.stocks.find(s => s.symbol === symbol);
+            const investment = stock.price * quantity;
+            const expectedReturn = stock.expectedReturn * quantity;
+            
+            selectedStocks.push({
+                symbol: stock.symbol,
+                price: stock.price,
+                quantity: quantity,
+                totalCost: investment,
+                expectedReturn: stock.expectedReturn,
+                totalReturn: expectedReturn
+            });
+            
+            totalInvestment += investment;
+            totalReturn += expectedReturn;
+        }
+        
         const remainingBudget = this.budget - totalInvestment;
         
         return {
-            selectedStocks: selectedStocks.reverse(),
+            selectedStocks: selectedStocks.sort((a, b) => b.totalReturn - a.totalReturn),
             totalInvestment,
             totalReturn,
             remainingBudget,
-            maxValue: dp[n][W]
+            maxValue: dp[W]
         };
     }
 }

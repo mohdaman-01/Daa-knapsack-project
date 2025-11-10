@@ -175,10 +175,16 @@ function displayResults(result, budget) {
             card.style.animationDelay = `${index * 0.1}s`;
             card.innerHTML = `
                 <div class="stock-info">
-                    <div class="stock-symbol">${stock.symbol}</div>
-                    <div class="stock-details">Price: ₹${stock.price.toFixed(2)}</div>
+                    <div class="stock-symbol">${stock.symbol} <span class="quantity-badge">×${stock.quantity}</span></div>
+                    <div class="stock-details">
+                        <span>₹${stock.price.toFixed(2)} per share</span>
+                        <span class="total-cost">Total: ₹${stock.totalCost.toFixed(2)}</span>
+                    </div>
                 </div>
-                <div class="stock-return">+${stock.expectedReturn}%</div>
+                <div class="stock-return">
+                    <div class="return-percent">+${stock.expectedReturn}%</div>
+                    <div class="return-total">₹${stock.totalReturn.toFixed(2)}</div>
+                </div>
             `;
             selectedList.appendChild(card);
         });
@@ -405,7 +411,7 @@ function drawPieChart(result) {
     }
 
     // Calculate total investment
-    const total = result.selectedStocks.reduce((sum, stock) => sum + stock.price, 0);
+    const total = result.selectedStocks.reduce((sum, stock) => sum + stock.totalCost, 0);
 
     // Color palette
     const colors = [
@@ -428,7 +434,7 @@ function drawPieChart(result) {
 
     // Draw pie slices
     result.selectedStocks.forEach((stock, index) => {
-        const sliceAngle = (stock.price / total) * 2 * Math.PI;
+        const sliceAngle = (stock.totalCost / total) * 2 * Math.PI;
         const colorPair = colors[index % colors.length];
 
         // Create gradient for slice
@@ -459,7 +465,7 @@ function drawPieChart(result) {
         ctx.stroke();
 
         // Draw percentage directly on the slice
-        const percentage = ((stock.price / total) * 100).toFixed(1);
+        const percentage = ((stock.totalCost / total) * 100).toFixed(1);
         const midAngle = currentAngle + sliceAngle / 2;
         const textRadius = (radius + innerRadius) / 2;
         const textX = centerX + Math.cos(midAngle) * textRadius;
@@ -510,14 +516,14 @@ function drawPieLegend(result, colors, total) {
 
     result.selectedStocks.forEach((stock, index) => {
         const colorPair = colors[index % colors.length];
-        const percentage = ((stock.price / total) * 100).toFixed(1);
+        const percentage = ((stock.totalCost / total) * 100).toFixed(1);
 
         const legendItem = document.createElement('div');
         legendItem.className = 'legend-item';
         legendItem.innerHTML = `
             <div class="legend-color" style="background: linear-gradient(135deg, ${colorPair[0]}, ${colorPair[1]})"></div>
-            <span class="legend-label">${stock.symbol}</span>
-            <span class="legend-value">₹${stock.price.toFixed(0)} (${percentage}%)</span>
+            <span class="legend-label">${stock.symbol} ×${stock.quantity}</span>
+            <span class="legend-value">₹${stock.totalCost.toFixed(0)} (${percentage}%)</span>
         `;
         legendContainer.appendChild(legendItem);
     });
