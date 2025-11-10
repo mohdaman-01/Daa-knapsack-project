@@ -153,9 +153,14 @@ function displayResults(result, budget) {
     const resultsSection = document.getElementById('results');
     resultsSection.style.display = 'block';
 
+    // Calculate actual expected return in rupees
+    const expectedReturnAmount = result.selectedStocks.reduce((sum, stock) => {
+        return sum + (stock.totalCost * stock.expectedReturn / 100);
+    }, 0);
+
     // Animate numbers
     animateValue('totalInvestment', 0, result.totalInvestment, 1000, '₹');
-    animateValue('expectedReturn', 0, result.totalReturn, 1000, '', '%');
+    animateValue('expectedReturn', 0, expectedReturnAmount, 1000, '₹');
     animateValue('remainingBudget', 0, result.remainingBudget, 1000, '₹');
 
     // Update progress bar
@@ -173,17 +178,18 @@ function displayResults(result, budget) {
             const card = document.createElement('div');
             card.className = 'stock-card';
             card.style.animationDelay = `${index * 0.1}s`;
+            const returnAmount = (stock.totalCost * stock.expectedReturn / 100).toFixed(2);
             card.innerHTML = `
                 <div class="stock-info">
                     <div class="stock-symbol">${stock.symbol} <span class="quantity-badge">×${stock.quantity}</span></div>
                     <div class="stock-details">
                         <span>₹${stock.price.toFixed(2)} per share</span>
-                        <span class="total-cost">Total: ₹${stock.totalCost.toFixed(2)}</span>
+                        <span class="total-cost">Investment: ₹${stock.totalCost.toFixed(2)}</span>
                     </div>
                 </div>
                 <div class="stock-return">
-                    <div class="return-percent">+${stock.expectedReturn}%</div>
-                    <div class="return-total">₹${stock.totalReturn.toFixed(2)}</div>
+                    <div class="return-percent">${stock.expectedReturn}%</div>
+                    <div class="return-total">+₹${returnAmount}</div>
                 </div>
             `;
             selectedList.appendChild(card);
