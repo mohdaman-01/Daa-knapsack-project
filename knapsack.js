@@ -1,59 +1,95 @@
 // Knapsack Algorithm Implementation for Stock Investment Optimization
 class KnapsackOptimizer {
     constructor(budget, stocks) {
-        this.budget = Math.floor(budget);
+        this.budget = budget;
         this.stocks = stocks;
     }
 
-    // Unbounded Knapsack using Dynamic Programming (allows multiple shares)
+    // Diversified Portfolio Optimization using Modified Knapsack
     optimize() {
-        const n = this.stocks.length;
-        const W = this.budget;
+        if (this.stocks.length === 0) {
+            return {
+                selectedStocks: [],
+                totalInvestment: 0,
+                totalReturn: 0,
+                remainingBudget: this.budget,
+                maxValue: 0
+            };
+        }
+
+        // Sort stocks by return/price ratio (efficiency)
+        const sortedStocks = [...this.stocks].sort((a, b) => {
+            return (b.expectedReturn / b.price) - (a.expectedReturn / a.price);
+        });
+
+        let remainingBudget = this.budget;
+        const portfolio = new Map();
+
+        // Strategy: Diversify across all profitable stocks
+        // First pass: Buy at least one share of each stock if possible
+        for (const stock of sortedStocks) {
+            if (remainingBudget >= stock.price) {
+                portfolio.set(stock.symbol, {
+                    stock: stock,
+                    quantity: 1
+                });
+                remainingBudget -= stock.price;
+            }
+        }
+
+        // Second pass: Distribute remaining budget proportionally based on returns
+        // Calculate total return rate for normalization
+        const totalReturnRate = sortedStocks.reduce((sum, s) => sum + s.expectedReturn, 0);
         
-        // Create DP table and parent tracking
-        const dp = Array(W + 1).fill(0);
-        const parent = Array(W + 1).fill(-1);
-        
-        // Build table - unbounded knapsack allows multiple items
-        for (let w = 1; w <= W; w++) {
-            for (let i = 0; i < n; i++) {
-                const stock = this.stocks[i];
-                const price = Math.floor(stock.price);
-                const value = stock.expectedReturn;
-                
-                if (price <= w && dp[w - price] + value > dp[w]) {
-                    dp[w] = dp[w - price] + value;
-                    parent[w] = i;
+        // Allocate remaining budget proportionally
+        for (const stock of sortedStocks) {
+            if (remainingBudget < stock.price) continue;
+            
+            // Calculate how much budget this stock should get based on its return
+            const proportion = stock.expectedReturn / totalReturnRate;
+            const targetAllocation = this.budget * proportion;
+            
+            // Calculate current allocation
+            const currentAllocation = portfolio.has(stock.symbol) 
+                ? portfolio.get(stock.symbol).quantity * stock.price 
+                : 0;
+            
+            // Buy more shares to reach target (or as close as possible)
+            const additionalBudget = Math.min(targetAllocation - currentAllocation, remainingBudget);
+            const additionalShares = Math.floor(additionalBudget / stock.price);
+            
+            if (additionalShares > 0) {
+                const current = portfolio.get(stock.symbol);
+                current.quantity += additionalShares;
+                remainingBudget -= additionalShares * stock.price;
+            }
+        }
+
+        // Third pass: Use any remaining budget on the best performing stocks
+        let improved = true;
+        while (improved && remainingBudget > 0) {
+            improved = false;
+            for (const stock of sortedStocks) {
+                if (remainingBudget >= stock.price) {
+                    const current = portfolio.get(stock.symbol);
+                    current.quantity += 1;
+                    remainingBudget -= stock.price;
+                    improved = true;
+                    break;
                 }
             }
         }
-        
-        // Backtrack to find selected stocks with quantities
-        const stockQuantities = new Map();
-        let w = W;
-        
-        while (w > 0 && parent[w] !== -1) {
-            const stockIndex = parent[w];
-            const stock = this.stocks[stockIndex];
-            const price = Math.floor(stock.price);
-            
-            // Count quantity
-            const key = stock.symbol;
-            stockQuantities.set(key, (stockQuantities.get(key) || 0) + 1);
-            
-            w -= price;
-        }
-        
-        // Build result with quantities
+
+        // Build result
         const selectedStocks = [];
         let totalInvestment = 0;
         let totalReturn = 0;
-        
-        for (const [symbol, quantity] of stockQuantities) {
-            const stock = this.stocks.find(s => s.symbol === symbol);
+
+        for (const [symbol, data] of portfolio) {
+            const { stock, quantity } = data;
             const investment = stock.price * quantity;
             const expectedReturn = stock.expectedReturn * quantity;
-            
+
             selectedStocks.push({
                 symbol: stock.symbol,
                 price: stock.price,
@@ -62,19 +98,17 @@ class KnapsackOptimizer {
                 expectedReturn: stock.expectedReturn,
                 totalReturn: expectedReturn
             });
-            
+
             totalInvestment += investment;
             totalReturn += expectedReturn;
         }
-        
-        const remainingBudget = this.budget - totalInvestment;
-        
+
         return {
             selectedStocks: selectedStocks.sort((a, b) => b.totalReturn - a.totalReturn),
             totalInvestment,
             totalReturn,
             remainingBudget,
-            maxValue: dp[W]
+            maxValue: totalReturn
         };
     }
 }
