@@ -485,6 +485,13 @@ tbody input:focus {
     cursor: crosshair;
 }
 
+#pieChart {
+    max-width: 100%;
+    height: 350px;
+    display: block;
+    margin: 0 auto;
+}
+
 
 /* UX Enhancements */
 .input-wrapper {
@@ -766,33 +773,44 @@ canvas:hover {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    align-items: center;
     gap: 15px;
-    margin-top: 20px;
-    padding-top: 20px;
+    margin-top: 25px;
+    padding-top: 25px;
     border-top: 2px solid #e2e8f0;
 }
 
 .legend-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
+    gap: 10px;
+    padding: 10px 16px;
     background: #f7fafc;
-    border-radius: 8px;
-    font-size: 0.9em;
+    border-radius: 10px;
+    font-size: 0.95em;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.legend-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .legend-color {
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .legend-label {
-    font-weight: 600;
+    font-weight: 700;
     color: #2d3748;
+    min-width: 60px;
 }
 
 .legend-value {
     color: #718096;
+    font-weight: 500;
 }

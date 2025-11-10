@@ -386,13 +386,13 @@ function drawPieChart(result) {
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr;
-    canvas.height = 450 * dpr;
+    canvas.height = 350 * dpr;
     canvas.style.width = rect.width + 'px';
-    canvas.style.height = '450px';
+    canvas.style.height = '350px';
     ctx.scale(dpr, dpr);
 
     const width = rect.width;
-    const height = 450;
+    const height = 350;
 
     ctx.clearRect(0, 0, width, height);
 
@@ -416,13 +416,13 @@ function drawPieChart(result) {
         ['#fa709a', '#fee140']
     ];
 
-    // Center and radius - much smaller to fit labels within canvas
-    const padding = 80; // Space for labels
+    // Center and radius - bigger chart with minimal padding
+    const padding = 40; // Minimal space for edge
     const centerX = width / 2;
     const centerY = height / 2;
     const availableSize = Math.min(width - padding * 2, height - padding * 2);
     const radius = availableSize / 2;
-    const innerRadius = radius * 0.55; // Donut chart
+    const innerRadius = radius * 0.6; // Donut chart
 
     let currentAngle = -Math.PI / 2;
 
